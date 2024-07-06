@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { NavLink } from 'react-router-dom'
-import Logo from '../../public/logo.svg'
+import Logo from '/logo.svg'
 
 const Navbar = ({ color, colortheme }) => {
     const [hover, setHover] = useState(false)
