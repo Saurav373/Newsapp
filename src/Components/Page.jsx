@@ -1,90 +1,105 @@
-import React, { useEffect, useState } from 'react'
-import Card from './Card'
-import Sceleton from './Sceleton'
-import InfiniteScroll from 'react-infinite-scroll-component';
-import toast from 'react-hot-toast';
-import Loader from './Loader';
+import React, { useEffect, useState } from "react";
+import Card from "./Card";
+import Skeleton from "./Skeleton";
+import InfiniteScroll from "react-infinite-scroll-component";
+import toast from "react-hot-toast";
+import Loader from "./Loader";
 
 const App = ({ category, setProgress, color }) => {
+  const [news, setNews] = useState([]);
+  const [totalResults, setTotalResults] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
 
-  const [news, setnews] = useState([])
-  const [totalresults, setTotalresults] = useState(0)
-  const [hasMore, sethasMore] = useState(false)
-  const [page, setpage] = useState(1)
-
-  const Url = `https://newsapi.org/v2/top-headlines?country=us&category=${category}&pageSize=5&apiKey=1af076774e1b4a50ab8a57e39fd73843&page=${page}`
-
-  const fetchdata = async () => {
+  const fetchData = async (page) => {
+    
+    const Url = `https://newsapi.org/v2/top-headlines?country=us&category=${category}&pageSize=5&apiKey=1af076774e1b4a50ab8a57e39fd73843&page=${page}`;
 
     try {
-      setProgress(70)
-      response = await fetch(Url)
-      response = await response.json()
-      setnews(prevNews => [...prevNews, ...response.articles]);
-      setProgress(100)
-      setTotalresults(() => response.totalResults)
+      setProgress(70);
+      let response = await fetch(Url);
+      response = await response.json();
+      setProgress(100);
 
-      if (page < (totalresults) / 5) {
-        setpage(prevPage => prevPage + 1);
+      if (response.articles && response.articles.length > 0) {
+        setNews((prevNews) => [...prevNews, ...response.articles]);
+        setTotalResults(response.totalResults);
+        if (
+          response.articles.length < 5 ||
+          news.length + response.articles.length >= response.totalResults
+        ) {
+          setHasMore(false);
+        }
       } else {
-        sethasMore(false)
+        setHasMore(false);
       }
-
     } catch (err) {
-      setProgress(100)
-      toast.error('Error in Fetching News')
+      setProgress(100);
+      toast.error("Error in Fetching News");
+      console.log(err);
     }
-
-  }
+  };
 
   const handleOffline = () => {
-    toast.error('No internet Connection');
-    window.addEventListener('online', handleOnline);
+    toast.error("No internet Connection");
+    window.addEventListener("online", handleOnline);
   };
 
   const handleOnline = () => {
-    toast.success('Online back');
-    window.removeEventListener('online', handleOnline);
-    fetchdata();
+    toast.success("Online back");
+    window.removeEventListener("online", handleOnline);
+    fetchData(page);
   };
 
-
   useEffect(() => {
-
-    window.addEventListener('offline', handleOffline);
-    fetchdata()
+    window.addEventListener("offline", handleOffline);
+    fetchData(page);
 
     return () => {
-      window.removeEventListener('offline', handleOffline);
-      window.removeEventListener('online', handleOnline);
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", handleOnline);
     };
-  }, [])
+  }, []);
 
+  useEffect(() => {
+    setNews([]);
+    setPage(1);
+    setHasMore(true);
+    fetchData(1);
+  }, [category]);
 
   return (
     <>
       <InfiniteScroll
-        dataLength={news ? news.length : 5}
-        next={fetchdata}
+        dataLength={news.length}
+        next={() => fetchData(page + 1)}
         hasMore={hasMore}
         loader={<Loader />}
       >
-        <div className='my-10 grid grid-cols-3 gap-4'>
-          {(!news || news.length < 1) && new Array(15).fill(0).map((_, i) => {
-            return <Sceleton key={i} />
-          })}
+        <div className="my-10 grid grid-cols-3 gap-4">
+          {(!news || news.length < 1) &&
+            new Array(15).fill(0).map((_, i) => {
+              return <Skeleton key={i} />;
+            })}
 
-          {news && news.length !== 0 && news.map((e, index) => {
-            return (<Card key={index} title={e.title} content={e.content} ImageUrl={e.urlToImage} sourceUrl={e.url} color={color} />)
-          })}
-
-
+          {news &&
+            news.length !== 0 &&
+            news.map((e, index) => {
+              return (
+                <Card
+                  key={index}
+                  title={e.title}
+                  content={e.content}
+                  ImageUrl={e.urlToImage}
+                  sourceUrl={e.url}
+                  color={color}
+                />
+              );
+            })}
         </div>
-      </InfiniteScroll >
+      </InfiniteScroll>
     </>
-  )
-}
+  );
+};
 
-export default App
-
-
+export default App;

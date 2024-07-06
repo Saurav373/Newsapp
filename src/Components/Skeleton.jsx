@@ -1,6 +1,6 @@
 import React from 'react'
 
-const Sceleton = () => {
+const Skeleton = () => {
   return (
 <div>
   <div className="flex animate-pulse relative top-5">
@@ -22,4 +22,4 @@ const Sceleton = () => {
   )
 }
 
-export default Sceleton
+export default Skeleton
